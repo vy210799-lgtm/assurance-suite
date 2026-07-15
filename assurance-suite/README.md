@@ -8,7 +8,9 @@ reviewing uploaded evidence files.
 **Stack**
 - Frontend: React 18 + Vite (`/frontend`)
 - Backend: Node.js + Express (`/backend`)
-- Database: SQLite via `better-sqlite3` (`/backend`)
+- Database: SQLite via Node's built-in `node:sqlite` module (`/backend`) —
+  no native compilation required, which matters on resource-limited free
+  hosts (see note below)
 
 ```
 assurance-suite/
@@ -20,13 +22,15 @@ assurance-suite/
 
 ## 1. Prerequisites
 
-- Node.js 18 or later (needed for the built-in `fetch` used by the Trust
-  Center connector and the AI assistant)
+- Node.js **22.5.0 or later**, ideally in the `22.5.x`–`22.22.x` range (the
+  project pins `22.11.0` via `backend/.node-version` for hosts that read
+  it, like Render). This is required for the built-in `node:sqlite` module.
 - npm
-- A build toolchain for native modules (`better-sqlite3` compiles on
-  install). On most systems this just works; on a fresh Linux box you may
-  need `build-essential` / `python3`, and on Windows the
-  "Desktop development with C++" workload.
+- No native build toolchain needed — unlike `better-sqlite3`,
+  `node:sqlite` ships inside Node itself with nothing to compile. This is
+  the reason the database layer uses it instead: native compilation is a
+  common source of failed deploys on free-tier hosts with limited
+  CPU/RAM.
 
 ## 2. Backend setup
 
@@ -47,9 +51,12 @@ Edit `.env`:
 npm run dev
 ```
 
-The first run creates `backend/assurance-suite.db` automatically (SQLite
-schema is created on startup — no separate migration step). The API is now
-at `http://localhost:4000/api`; check `http://localhost:4000/api/health`.
+You'll see a one-line warning — `ExperimentalWarning: SQLite is an
+experimental feature` — that's expected and harmless; it's Node telling you
+`node:sqlite` is newer API, not an error. The first run creates
+`backend/assurance-suite.db` automatically (SQLite schema is created on
+startup — no separate migration step). The API is now at
+`http://localhost:4000/api`; check `http://localhost:4000/api/health`.
 
 ## 3. Frontend setup
 
